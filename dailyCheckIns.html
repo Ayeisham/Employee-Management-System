@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Daily Attendance</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #f5f5f5;
+        display: flex;
+      }
+      .sidebar {
+        width: 250px;
+        background: #096666;
+        color: white;
+        height: 100vh;
+        padding: 20px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+      }
+      .sidebar .user-info {
+        margin-bottom: 30px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      .sidebar button {
+        background: #064d4d;
+        border: none;
+        color: white;
+        padding: 12px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        width: 100%;
+        border-radius: 5px;
+        text-align: left;
+      }
+      .sidebar button:hover {
+        background: #042f2f;
+      }
+
+      .main {
+        flex: 1;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .box {
+        background: white;
+        padding: 30px;
+        width: 760px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+      }
+      button.submit-btn {
+        width: 100%;
+        padding: 10px;
+        background: #096666;
+        color: white;
+        border: none;
+        margin-top: 20px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+      .radio-group {
+        margin-top: 15px;
+      }
+      .message {
+        margin-top: 15px;
+        color: green;
+      }
+      .error {
+        color: red;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar">
+      <div class="user-info">
+        <strong id="userName"></strong><br />
+        <strong id="userID"></strong>
+      </div>
+
+      <button id="attendanceBtn">My Attendance</button>
+      <button id="leaveBtn">Apply Leave</button>
+      <button id="myLeavesBtn">My Leaves</button>
+      <button id="viewTeamBtn">Team Attendance</button>
+      <button id="viewLeaveRequestsBtn">Team Leave Requests</button>
+      <button id="logoutBtn">Logout</button>
+    </div>
+
+    <div class="main">
+      <!-- My Attendance -->
+      <div class="box" id="attendanceBox">
+        <h2>Time Logger</h2>
+        <form id="attendanceForm">
+          <div class="radio-group">
+            <label
+              ><input type="radio" name="type" value="checkIn" /> Check
+              In</label
+            >
+            <label
+              ><input type="radio" name="type" value="checkOut" /> Check
+              Out</label
+            >
+          </div>
+          <button class="submit-btn">Submit</button>
+          <div class="message" id="message"></div>
+        </form>
+      </div>
+
+      <!-- Apply Leave -->
+      <div class="box" id="leaveBox" style="display: none">
+        <h2>Apply Leave</h2>
+        <select id="leaveType">
+          <option value="">Select Leave Type</option>
+          <option value="Sick">Sick</option>
+          <option value="Casual">Casual</option>
+          <option value="Annual">Annual</option></select
+        ><br /><br />
+
+        <input type="date" id="leaveFrom" /><br /><br />
+        <input type="date" id="leaveTo" /><br /><br />
+        <textarea id="leaveReason" placeholder="Reason"></textarea>
+
+        <button id="submitLeaveBtn" class="submit-btn">Submit Leave</button>
+      </div>
+
+      <!-- My Leaves -->
+      <div class="box" id="myLeavesBox" style="display: none">
+        <h2>My Leaves</h2>
+        <table id="myLeavesTable">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Team Attendance -->
+      <div class="box" id="teamBox" style="display: none">
+        <h2>Team Attendance</h2>
+        <table id="teamTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Department</th>
+              <th>Check In</th>
+              <th>Check Out</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- Team Leave Requests -->
+      <div class="box" id="leaveRequestsBox" style="display: none">
+        <h2>Team Leave Requests</h2>
+        <table id="leaveRequestsTable">
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Name</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Reason</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) {
+        location.href = "signin.html";
+      }
+
+      userName.textContent = "Name: " + user.first_name + " " + user.last_name;
+      userID.textContent = "ID: " + user.employee_id;
+
+      function hideAll() {
+        attendanceBox.style.display = "none";
+        leaveBox.style.display = "none";
+        myLeavesBox.style.display = "none";
+        teamBox.style.display = "none";
+        leaveRequestsBox.style.display = "none";
+      }
+
+      /* BUTTON FLOW (EXACT REQUIREMENT) */
+
+      attendanceBtn.onclick = () => {
+        hideAll();
+        attendanceBox.style.display = "block";
+      };
+
+      leaveBtn.onclick = () => {
+        hideAll();
+        leaveBox.style.display = "block";
+      };
+
+      myLeavesBtn.onclick = async () => {
+        hideAll();
+        await loadMyLeaves();
+        myLeavesBox.style.display = "block";
+      };
+
+      viewTeamBtn.onclick = async () => {
+        hideAll();
+        await loadTeam();
+        teamBox.style.display = "block";
+      };
+
+      viewLeaveRequestsBtn.onclick = async () => {
+        hideAll();
+        await loadLeaveRequests();
+        leaveRequestsBox.style.display = "block";
+      };
+
+      logoutBtn.onclick = () => {
+        localStorage.clear();
+        location.href = "signin.html";
+      };
+
+      //Marking attendance
+      document
+        .getElementById("attendanceForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const type = document.querySelector(
+            'input[name="type"]:checked'
+          )?.value;
+          const msg = document.getElementById("message");
+          msg.textContent = "";
+          msg.classList.remove("error");
+          if (!type) {
+            msg.textContent = "Select Check In/Out";
+            msg.classList.add("error");
+            return;
+          }
+
+          try {
+            const res = await fetch(
+              "http://localhost:3000/employee/markAttendance",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: "Bearer " + localStorage.getItem("token"),
+                },
+                body: JSON.stringify({ type }),
+              }
+            );
+            const result = await res.json();
+            msg.textContent = result.message;
+          } catch (err) {
+            console.error(err);
+            msg.textContent = "Server error";
+            msg.classList.add("error");
+          }
+        });
+
+      //apply for leave
+      document.getElementById("submitLeaveBtn").onclick = async () => {
+        const from = document.getElementById("leaveFrom").value;
+        const to = document.getElementById("leaveTo").value;
+        const reason = document.getElementById("leaveReason").value.trim();
+        const leave_type = document.getElementById("leaveType").value;
+
+        if (!from || !to || !reason || !leave_type) {
+          alert("Fill all fields");
+          return;
+        }
+
+        try {
+          const res = await fetch(
+            "http://localhost:3000/employee/requestleave",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + localStorage.getItem("token"),
+              },
+              body: JSON.stringify({
+                employee_id: user.employee_id,
+                start_date: from,
+                end_date: to,
+                reason,
+                leave_type,
+              }),
+            }
+          );
+
+          const result = await res.json();
+
+          if (res.ok) {
+            alert(result.message);
+          } else {
+            alert(result.message || "Error submitting leave");
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Error submitting leave");
+        }
+      };
+
+      //my leaves tab
+      async function loadMyLeaves() {
+        const tbody = document.querySelector("#myLeavesTable tbody");
+        tbody.innerHTML = "";
+
+        try {
+          const res = await fetch("http://localhost:3000/employee/myList", {
+            headers: {
+              Authorization: "Bearer " + localStorage.getItem("token"),
+            },
+          });
+
+          if (!res.ok) {
+            tbody.innerHTML =
+              "<tr><td colspan='4'>Unauthorized or No Data</td></tr>";
+            return;
+          }
+
+          const leaves = await res.json();
+
+          if (!leaves || leaves.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='4'>No leave records</td></tr>";
+            return;
+          }
+
+          leaves.forEach((l) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${l.leave_type || "-"}</td>
+                    <td>${l.start_date}</td>
+                    <td>${l.end_date}</td>
+                    <td>${l.status}</td>
+                </tr>
+            `;
+          });
+        } catch (err) {
+          console.error(err);
+          tbody.innerHTML = "<tr><td colspan='4'>Error loading data</td></tr>";
+        }
+      }
+
+      //Team attendance
+      async function loadTeam() {
+        /* your existing API */
+        const tbody = document.querySelector("#teamTable tbody");
+        tbody.innerHTML = "";
+
+        try {
+          // ✅ define manager_id from logged-in user
+          const manager_id = user.employee_id;
+
+          const res = await fetch(
+            `http://localhost:3000/employee/manager/${manager_id}/attendance`,
+            {
+              headers: {
+                Authorization: "Bearer " + localStorage.getItem("token"),
+              },
+            }
+          );
+
+          if (!res.ok) {
+            tbody.innerHTML =
+              "<tr><td colspan='6'>No data or unauthorized</td></tr>";
+            return;
+          }
+
+          const data = await res.json();
+          // ✅ access the employees array correctly
+          const employees = data.employees || [];
+          if (employees.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='6'>No employees</td></tr>";
+            return;
+          }
+
+          employees.forEach((emp) => {
+            const row = `<tr>
+                <td>${emp.employee_id}</td>
+                <td>${emp.first_name} ${emp.last_name}</td>
+                <td>${emp.department_name}</td>
+                <td>${emp.checkIn_time || "-"}</td>
+                <td>${emp.checkOut_time || "-"}</td>
+                <td>${emp.attendance_date || "-"}</td>
+            </tr>`;
+            tbody.innerHTML += row;
+          });
+        } catch (err) {
+          console.error(err);
+          tbody.innerHTML = "<tr><td colspan='6'>Error loading</td></tr>";
+        }
+      }
+
+      //team leave requests to manager
+      async function loadLeaveRequests() {
+        const tbody = document.querySelector("#leaveRequestsTable tbody");
+        tbody.innerHTML = "";
+
+        try {
+          const res = await fetch(
+            "http://localhost:3000/employee/leaveRecord",
+            {
+              headers: {
+                Authorization: "Bearer " + localStorage.getItem("token"),
+              },
+            }
+          );
+
+          if (!res.ok) {
+            tbody.innerHTML =
+              "<tr><td colspan='7'>No data or unauthorized</td></tr>";
+            return;
+          }
+
+          const requests = await res.json();
+
+          if (!requests || requests.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='7'>No leave requests</td></tr>";
+            return;
+          }
+
+          requests.forEach((r) => {
+            console.log("Leave Row:", r);
+            const actions =
+              r.status === "Pending"
+                ? `<button onclick="updateLeave('${r.leave_id}', 'Approved')">Approve</button>
+                       <button onclick="updateLeave('${r.leave_id}', 'Rejected')">Reject</button>`
+                : "-";
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${r.employee_id}</td>
+                    <td>${r.first_name} ${r.last_name}</td>
+                    <td>${r.start_date}</td>
+                    <td>${r.end_date}</td>
+                    <td>${r.reason}</td>
+                    <td>${r.status}</td>
+                    <td>${actions}</td>
+                </tr>
+            `;
+          });
+        } catch (err) {
+          console.error(err);
+          tbody.innerHTML =
+            "<tr><td colspan='7'>Error loading leave requests</td></tr>";
+        }
+      }
+
+      //reject / approve leave
+      async function updateLeave(leave_id, status) {
+        try {
+          const res = await fetch(
+            `http://localhost:3000/employee/leave-request/${leave_id}`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + localStorage.getItem("token"),
+              },
+              body: JSON.stringify({ status }),
+            }
+          );
+
+          const result = await res.json();
+
+          if (!res.ok) {
+            alert(result.message || "Failed to update leave");
+            return;
+          }
+
+          alert(result.message);
+          await loadLeaveRequests();
+        } catch (err) {
+          console.error(err);
+          alert("Error updating leave");
+        }
+      }
+    </script>
+  </body>
+</html>

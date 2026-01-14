@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up</title>
+<style>
+body { font-family: Arial; background: beige; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+.form-box { background:white; padding:30px; border-radius:10px; width:400px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+.form-box input, .form-box select, .form-box button { width:100%; padding:8px; margin-top:10px; border-radius:5px; border:1px solid #ccc; box-sizing:border-box; }
+.form-box button { background:#096666; color:white; border:none; cursor:pointer; margin-top:20px; }
+.form-box button:hover { background:#064d4d; }
+.error { color:red; font-size:0.85em; }
+</style>
+</head>
+<body>
+
+<div class="form-box">
+  <h2>SIGN UP</h2>
+  <form id="signupForm">
+    <input type="text" id="empID" placeholder="Employee ID" required>
+    <input type="text" id="fname" placeholder="First Name" required>
+    <input type="text" id="lname" placeholder="Last Name" required>
+    <input type="text" id="fathername" placeholder="Father Name" required>
+    <input type="text" id="cnic" placeholder="CNIC (xxxxx-xxxxxxx-x)" required>
+    <input type="date" id="DOB" required>
+    <input type="text" id="address" placeholder="Address" required>
+    <input type="number" id="salary" placeholder="Salary" required>
+
+    <input type="password" id="password" placeholder="Password (min 6 characters)" required minlength="6">
+
+    <select id="department" required>
+      <option value="" disabled selected>Select Department</option>
+    </select>
+
+    <select id="manager">
+      <option value="" selected>No Manager</option>
+    </select>
+
+    <button type="submit">SIGN UP</button>
+  </form>
+
+  <p style="margin-top: 15px; text-align: center;">
+    Already have an account? <a href="signin.html">Sign In</a>
+  </p>
+</div>
+
+<script>
+const deptSelect = document.getElementById("department");
+const managerSelect = document.getElementById("manager");
+
+
+fetch("http://localhost:3000/departments/getdepartments")
+.then(res => res.json())
+.then(data => {
+    console.log("Departments API:", data);
+    data.forEach(dep => {
+        const option = document.createElement("option");
+        option.value = dep.department_id;
+        option.textContent = dep.department_name;
+        deptSelect.appendChild(option);
+    }); 
+});
+
+
+fetch("http://localhost:3000/employee/getemployees")
+.then(res => res.json())
+.then(data => {
+    console.log("employees API:", data);
+    data.forEach(emp => {
+        const option = document.createElement("option");
+        option.value = emp.employee_id;
+        option.textContent = `${emp.first_name} ${emp.last_name} (${emp.employee_id})`;
+        managerSelect.appendChild(option);
+    });
+});
+
+
+document.getElementById("signupForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+
+    const employee_id = document.getElementById("empID").value.trim();
+    const first_name = document.getElementById("fname").value.trim();
+    const last_name = document.getElementById("lname").value.trim();
+    const father_name = document.getElementById("fathername").value.trim();
+    const cnic = document.getElementById("cnic").value.trim();
+    const dob = document.getElementById("DOB").value.trim();
+    const address = document.getElementById("address").value.trim();
+    const salary = parseFloat(document.getElementById("salary").value.trim());
+    const password = document.getElementById("password").value.trim();
+    const department_id = deptSelect.value;
+    const manager_id = managerSelect.value || null;
+
+    const body = {
+        employee_id,
+        first_name,
+        last_name,
+        father_name,
+        cnic,
+        dob,
+        address,
+        salary,
+        department_id,
+        manager_id,
+        password
+    };
+
+    try {
+        const res = await fetch("http://localhost:3000/employee/signup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+
+        const result = await res.text();
+        alert(result);
+
+        if (result.includes("successfully")) {
+            document.getElementById("signupForm").reset();
+            window.location.href = "signin.html";
+        }
+
+    } catch(err){
+        console.error(err);
+        alert("Server error. Please check console.");
+    }
+});
+</script>
+</body>
+</html>

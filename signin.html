@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In</title>
+<style>
+body { font-family: Arial; background: beige; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+.form-box { background:white; padding:30px; border-radius:10px; width:400px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+.form-box input, .form-box button { width:100%; padding:8px; margin-top:10px; border-radius:5px; border:1px solid #ccc; box-sizing:border-box; }
+.form-box button { background:#096666; color:white; border:none; cursor:pointer; margin-top:20px; }
+.form-box button:hover { background:#064d4d; }
+.error { color:red; font-size:0.85em; margin-top:2px; }
+</style>
+</head>
+<body>
+
+<div class="form-box">
+  <h2>SIGN IN</h2>
+
+  <form id="signinForm">
+    <input type="text" id="empID" placeholder="Employee ID">
+    <div class="error" id="empIDError"></div>
+
+    <input type="password" id="password" placeholder="Password">
+    <div class="error" id="passwordError"></div>
+
+    <button type="submit">SIGN IN</button>
+  </form>
+
+  <p style="margin-top:15px; text-align:center;">
+    Don't have an account? 
+    <a href="signup.html" style="color:#096666; text-decoration:none;">Sign Up here</a>
+  </p>
+</div>
+
+<script>
+
+// SIGN-IN SUBMIT
+document.getElementById("signinForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+
+    document.querySelectorAll(".error").forEach(el => el.innerText = "");
+
+    const empID = document.getElementById("empID").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    let valid = true;
+
+    if (!empID) { document.getElementById("empIDError").innerText = "Employee ID required"; valid = false; }
+    if (!password) { document.getElementById("passwordError").innerText = "Password required"; valid = false; }
+    if (!valid) return;
+
+    const data = { employee_id: empID, password };  //  Correct body
+
+    try {
+        const res = await fetch("http://localhost:3000/employee/signin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+
+        if (result.message && result.message.includes("successful")) {
+            alert("Login Successful!");
+
+            //  Save complete user object (including role)
+            localStorage.setItem("user", JSON.stringify(result.user));
+            localStorage.setItem("token", result.token);
+
+            // Redirect
+            window.location.href = "dailyCheckIns.html";
+        } else {
+            alert(result.message || "Login failed");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Server error. Check console.");
+    }
+});
+
+</script>
+
+</body>
+</html>
