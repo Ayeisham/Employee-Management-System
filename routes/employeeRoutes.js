@@ -1,13 +1,19 @@
 const express = require("express");
 const authenticateToken = require("../middlewares/auth");
-
-const EmployeeController = require("../controllers/employeeController");
 const CreateEmployeeSchema = require("../middlewares/schemajoi");
+const CreateAdmin = require("../middlewares/adminAuth");
 const { createEmployeeSchema } = require("../constants/employeeSchema");
 const { leaveRequestSchema } = require("../constants/leaveSchema");
+const EmployeeController = require("../controllers/employeeController");
 
 const router = express.Router();
 
+// router.post(
+//   "/admin/create-manager",
+//   authenticateToken,
+//   CreateAdmin,
+//   EmployeeController.createManager
+// );
 router.get("/getemployees", EmployeeController.getEmployees);
 
 router.post(

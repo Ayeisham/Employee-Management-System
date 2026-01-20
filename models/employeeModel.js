@@ -1,23 +1,28 @@
 const { DataTypes } = require("sequelize");
 const bcrypt = require("bcrypt");
 const sequelize = require("../config/database");
-const { string } = require("joi");
-
 const Employee = sequelize.define(
   "Employee",
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
+      primaryKey: true,
     },
 
     employee_id: {
       type: DataTypes.STRING,
-      primaryKey: true,
       allowNull: false,
       unique: true,
     },
-
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+      validate: {
+        isEmail: true,
+      },
+    },
     first_name: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -56,9 +61,6 @@ const Employee = sequelize.define(
     password: {
       type: DataTypes.STRING,
       allowNull: false,
-      validate: {
-        len: [6, 30],
-      },
     },
 
     department_id: {
@@ -85,7 +87,7 @@ const Employee = sequelize.define(
         employee.password = await bcrypt.hash(employee.password, 10);
       },
     },
-  }
+  },
 );
 
 module.exports = Employee;

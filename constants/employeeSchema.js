@@ -10,6 +10,14 @@ exports.createEmployeeSchema = Joi.object({
       "string.pattern.base": "Employee ID contains invalid characters",
     }),
 
+  email: Joi.string()
+    .trim()
+    .email({ tlds: { allow: false } })
+    .required()
+    .messages({
+      "string.email": "Invalid email format",
+    }),
+
   first_name: Joi.string()
     .trim()
     .pattern(/^[A-Za-z\s]+$/)

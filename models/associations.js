@@ -21,6 +21,7 @@ dailyAttendance.belongsTo(Employeez, {
 Employeez.belongsTo(dpartment, {
   foreignKey: "department_id",
   as: "department",
+ 
 });
 
 dpartment.hasMany(Employeez, {

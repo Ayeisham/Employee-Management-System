@@ -1,7 +1,6 @@
-const EmployeeModel = require("../models/employeeModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { date } = require("joi");
+// const { date } = require("joi");
 const EmployeeRepository = require("../repositories/employeeRepositories");
 
 const EmployeeService = {
@@ -12,6 +11,7 @@ const EmployeeService = {
   registerEmployee: async (data) => {
     const {
       employee_id,
+      email,
       first_name,
       last_name,
       father_name,
@@ -30,8 +30,12 @@ const EmployeeService = {
     if (existing) {
       throw new Error("Employee Already exists");
     }
+    if (!password || password.length < 6) {
+      throw new Error("Password must be at least 6 characters");
+    }
     return await EmployeeRepository.createEmployee({
       employee_id,
+      email,
       first_name,
       last_name,
       father_name,
