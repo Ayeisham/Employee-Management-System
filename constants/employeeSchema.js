@@ -55,11 +55,13 @@ exports.createEmployeeSchema = Joi.object({
       "string.pattern.base": "CNIC must be in format 12345-1234567-1",
     }),
 
-  dob: Joi.date().iso().max("now").required().messages({
-    "date.max": "Date of birth cannot be in the future",
-    "date.format": "DOB must be in ISO format (YYYY-MM-DD)",
-  }),
-
+  dob: Joi.string()
+    .pattern(/^\d{4}-\d{2}-\d{2}$/)
+    .required()
+    .messages({
+      "string.pattern.base": "DOB must be in format YYYY-MM-DD",
+      "any.required": "Date of birth is required",
+    }),
   address: Joi.string().trim().min(10).max(200).required(),
 
   salary: Joi.number().precision(2).positive().max(10000000).required(),

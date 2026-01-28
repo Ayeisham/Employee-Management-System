@@ -6,14 +6,6 @@ const sequelize = new Sequelize("registration_db", "root", "admin", {
   dialect: "mysql", // or postgres
 });
 
-// this is used to drop or alter the tables in the database it is optional to be used.
-// sequelize.sync({ alter: true })
-// .then(() => console.log("Tables synced"));
-
-// sequelize.sync({ alter: true });
-// or for fresh start
-// sequelize.sync({ force: true });
-
 sequelize
   .authenticate()
   .then(() => console.log("DB connected"))

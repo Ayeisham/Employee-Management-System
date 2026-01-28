@@ -5,6 +5,12 @@ const DailyAttendance = require("../models/attendanceModel");
 const Leave = require("../models/leaveModel");
 
 const EmployeeRepository = {
+  findEmployeeByEmail: async (email) => {
+    return await Employee.findOne({
+      where: { email },
+    });
+  },
+
   findEmployeeById: async (employee_id) => {
     return await Employee.findOne({
       where: { employee_id },
@@ -90,7 +96,7 @@ const EmployeeRepository = {
         {
           model: Employee,
           as: "employee",
-          attributes: ["first_name", "last_name"],
+          attributes: ["first_name"],
           where: { manager_id },
         },
       ],
@@ -100,10 +106,71 @@ const EmployeeRepository = {
   updateLeaveStatus: async (leave_id, status) => {
     const [updatedRows] = await Leave.update(
       { status },
-      { where: { leave_id } }
+      { where: { leave_id } },
     );
 
     return updatedRows;
+  },
+
+  // promoteToManager: async (employee_id) => {
+  //   const result = await Employee.update(
+  //     {
+  //       role: "Manager",
+  //       manager_id: null,
+  //     },
+  //     {
+  //       where: {
+  //         employee_id,
+  //       },
+  //     },
+  //   );
+  //   console.log("repo output: ", result);
+  // },
+
+  // assignEmployeeToManager: async (employeeIds, manager_id) => {
+  //   console.log("Employee ids in repo: ", employeeIds);
+  //   return Employee.update(
+  //     {
+  //       manager_id,
+  //     },
+  //     {
+  //       where: {
+  //         employee_id: employeeIds,
+  //       },
+  //     },
+  //   );
+  // },
+
+  updateResetToken: async (userId, hashedToken, expiresAt) => {
+    return Employee.update(
+      {
+        reset_password_token: hashedToken,
+        reset_password_expires: expiresAt,
+      },
+      {
+        where: {
+          id: userId,
+        },
+      },
+    );
+  },
+
+  findByResetToken: async (hashedToken) => {
+    return Employee.findOne({
+      where: {
+        reset_password_token: hashedToken,
+      },
+    });
+  },
+
+  updatePassword: async (userId, hashedPassword) => {
+    return Employee.update({
+      password: hashedPassword,
+      reset_password_token: null,
+      reset_password_expires: null,
+      
+    },  { where: { id : userId } }
+  );
   },
 };
 

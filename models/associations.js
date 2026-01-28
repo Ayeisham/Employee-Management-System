@@ -1,44 +1,53 @@
 // models/associations.js
-const Employeez = require("./employeeModel");
-const dailyAttendance = require("./attendanceModel");
-const dpartment = require("./departmentModel");
-const Leavez = require("./leaveModel");
+const Employee = require("./employeeModel");
+const DailyAttendance = require("./attendanceModel");
+const Department = require("./departmentModel");
+const Leave = require("./leaveModel");
 
 // One Employee has many attendance records
-Employeez.hasMany(dailyAttendance, {
+Employee.hasMany(DailyAttendance, {
   foreignKey: "employee_id",
   sourceKey: "employee_id",
   as: "attendances",
 });
 
 // Each DailyAttendance belongs to one Employee
-dailyAttendance.belongsTo(Employeez, {
+DailyAttendance.belongsTo(Employee, {
   foreignKey: "employee_id",
   targetKey: "employee_id",
   as: "employee",
 });
 
-Employeez.belongsTo(dpartment, {
+Employee.belongsTo(Department, {
   foreignKey: "department_id",
   as: "department",
- 
 });
 
-dpartment.hasMany(Employeez, {
+Department.hasMany(Employee, {
   foreignKey: "department_id",
-  as: "employees",
+  as: "employee",
 });
 
-Employeez.hasMany(Leavez, {
+Employee.hasMany(Leave, {
   foreignKey: "employee_id",
   sourceKey: "employee_id",
   as: "leaves",
 });
 
-Leavez.belongsTo(Employeez, {
+Leave.belongsTo(Employee, {
   foreignKey: "employee_id",
   targetKey: "employee_id",
   as: "employee",
 });
 
-module.exports = { Employeez, dailyAttendance, dpartment, Leavez };
+Employee.hasMany(Employee, {
+  foreignKey: "manager_id",
+  as: "team",
+});
+
+Employee.belongsTo(Employee, {
+  foreignKey: "manager_id",
+  as: "manager",
+});
+
+module.exports = { Employee, DailyAttendance, Department, Leave };

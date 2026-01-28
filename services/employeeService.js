@@ -1,7 +1,10 @@
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
+const { sendResetPasswordEmail } = require("../utils/mailer");
 const jwt = require("jsonwebtoken");
 // const { date } = require("joi");
 const EmployeeRepository = require("../repositories/employeeRepositories");
+const Employee = require("../models/employeeModel");
 
 const EmployeeService = {
   getEmployees: async () => {
@@ -49,10 +52,10 @@ const EmployeeService = {
       role,
     });
   },
-  loginUser: async (employee_id, password) => {
-    const employee = await EmployeeRepository.findEmployeeById(employee_id);
-    if (!employee) {
-      throw new Error("INVALID EMPLOYEE_ID");
+  loginUser: async (email, password) => {
+    const employee = await EmployeeRepository.findEmployeeByEmail(email);
+    if (!email) {
+      throw new Error("INVALID EMAIL");
     }
     const isMatch = await bcrypt.compare(password, employee.password);
 
@@ -63,12 +66,13 @@ const EmployeeService = {
     const token = jwt.sign(
       {
         employee_id: employee.employee_id,
+        email: employee.email,
         department_id: employee.department_id,
         manager_id: employee.manager_id,
         role: employee.role,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "1h" },
     );
 
     // 4️⃣ Return response (never return password)
@@ -78,6 +82,7 @@ const EmployeeService = {
         employee_id: employee.employee_id,
         first_name: employee.first_name,
         last_name: employee.last_name,
+        email: employee.email,
         role: employee.role,
       },
     };
@@ -169,7 +174,7 @@ const EmployeeService = {
 
     const updated = await EmployeeRepository.updateLeaveStatus(
       leave_id,
-      status
+      status,
     );
 
     if (updated === 0) {
@@ -177,6 +182,77 @@ const EmployeeService = {
     }
 
     return "Leave status updated successfully";
+  },
+
+  // assignManagerToEmployee: async (employeeIds, manager_id) => {
+  //   if (!Array.isArray(employeeIds || employeeIds.length === 0)) {
+  //     throw new Error("Employees are required");
+  //   }
+
+  //   if (!manager_id) {
+  //     throw new Error("Manager Id is required");
+  //   }
+
+  //   const manager = await EmployeeRepository.findEmployeeById(manager_id);
+  //   console.log("Manager found:", manager?.employee_id, manager?.role);
+  //   if (!manager) {
+  //     throw new Error("Manager is missing");
+  //   }
+
+  //   if (manager.role !== "Manager") {
+  //     await EmployeeRepository.promoteToManager(manager_id);
+  //   }
+  //   const [updatedCount] = await EmployeeRepository.assignEmployeeToManager(
+  //     employeeIds,
+  //     manager_id,
+  //   );
+  //   console.log("updated count ", updatedCount);
+
+  //   console.log("🔥 SERVICE STARTED");
+  //   console.log("manager_id:", manager_id);
+  //   console.log("employeeIds:", employeeIds);
+  //   return {
+  //     manager_id,
+  //     assigned_employee: employeeIds,
+  //     updated_count: updatedCount,
+  //   };
+  // },
+
+  forgotPassword: async (email) => {
+    const user = await EmployeeRepository.findEmployeeByEmail(email);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    const token = crypto.randomBytes(32).toString("hex");
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const expiresAt = Date.now() + 15 * 60 * 1000;
+
+    await EmployeeRepository.updateResetToken(user.id, hashedToken, expiresAt);
+
+    const resetLink = `http://localhost:3000/reset-password/${token}`;
+    await sendResetPasswordEmail(user.email, resetLink);
+
+    return { message: "Password reset link sent" };
+  },
+
+  resetPassword: async (token, new_password) => {
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await EmployeeRepository.findByResetToken(hashedToken);
+    if (!user) {
+      throw new Error("Invalid or expire token");
+    }
+
+    if (user.reset_password_expires < Date.now()) {
+      throw new Error("TOKEN_EXPIRED");
+    }
+    console.log("New PASSWORD :"  , new_password);
+    const hashedPassword = await bcrypt.hash(new_password, 10);
+
+    await EmployeeRepository.updatePassword(user.id, hashedPassword);
+    return { message: "Password reset successful" };
   },
 };
 

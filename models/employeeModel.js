@@ -74,9 +74,18 @@ const Employee = sequelize.define(
     },
 
     role: {
-      type: DataTypes.STRING,
+      type: DataTypes.ENUM("Employee"),
       allowNull: false,
       defaultValue: "Employee",
+    },
+    reset_password_token: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+
+    reset_password_expires: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
   },
   {

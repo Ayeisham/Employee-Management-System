@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -63,6 +63,7 @@
           required
         />
         <input type="date" id="DOB" required />
+
         <input type="text" id="address" placeholder="Address" required />
         <input type="number" id="salary" placeholder="Salary" required />
 
@@ -132,9 +133,10 @@
             .value.trim();
           const cnic = document.getElementById("cnic").value.trim();
           const dob = document.getElementById("DOB").value.trim();
+          // console.log("DOB after trim:", JSON.stringify(dob));
           const address = document.getElementById("address").value.trim();
           const salary = parseFloat(
-            document.getElementById("salary").value.trim()
+            document.getElementById("salary").value.trim(),
           );
           const password = document.getElementById("password").value.trim();
           const department_id = deptSelect.value;

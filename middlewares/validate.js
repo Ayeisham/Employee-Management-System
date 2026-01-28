@@ -1,10 +1,10 @@
 const validate = (schema, property = "body") => {
   return (req, res, next) => {
     const { error, value } = schema.validate(req[property], {
-      abortEarly: false,
-      allowUnknown: false,
-      convert: true,
-      scriptUnknown: true,
+      abortEarly: false, //collect all errors 
+      allowUnknown: false, //dont accept unknown values 
+      convert: true, //type casting
+      scriptUnknown: true, //ignore malicious scripts
     });
 
     if (error) {

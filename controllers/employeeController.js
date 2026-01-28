@@ -1,3 +1,4 @@
+const EmployeeRepository = require("../repositories/employeeRepositories");
 const EmployeeService = require("../services/employeeService");
 
 const EmployeeController = {
@@ -11,6 +12,8 @@ const EmployeeController = {
   },
   registerEmployee: async (req, res) => {
     try {
+      console.log(req.body);
+
       await EmployeeService.registerEmployee(req.body);
       res.status(201).send("Employee registered successfully");
     } catch (err) {
@@ -23,9 +26,9 @@ const EmployeeController = {
   },
   login: async (req, res) => {
     try {
-      const { employee_id, password } = req.body;
+      const { email, password } = req.body;
 
-      const result = await EmployeeService.loginUser(employee_id, password);
+      const result = await EmployeeService.loginUser(email, password);
 
       res.json({
         message: "sign-in successful",
@@ -34,8 +37,8 @@ const EmployeeController = {
       });
     } catch (err) {
       console.error("LOGIN ERROR:", err);
-      if (err.message === "INVALID EMPLOYEE_ID") {
-        return res.status(400).json({ message: "Invalid employee Id" });
+      if (err.message === "INVALID EMAIL") {
+        return res.status(400).json({ message: "Invalid email" });
       }
       if (err.message === "INVALID PASSWORD") {
         return res.status(400).json({ message: "Password is invalid" });
@@ -116,9 +119,11 @@ const EmployeeController = {
   },
   getLeavesByManager: async (req, res) => {
     try {
-      if (req.user.role != "manager") {
-        console.log("Access denied");
-      }
+      // if (req.user.role !== "manager") {
+      //   return res.status(403).json({
+      //     message: "Access denied: Managers only",
+      //   });
+      // }
       const manager_id = req.user.employee_id;
       const result = await EmployeeService.getLeavesByManager(manager_id);
       res.status(200).json(result);
@@ -132,9 +137,11 @@ const EmployeeController = {
   },
   updateLeaveStatus: async (req, res) => {
     try {
-      if (req.user.role !== "manager") {
-        return res.status(403).json({ message: "Access denied" });
-      }
+      // if (req.user.role !== "manager") {
+      //   return res.status(403).json({
+      //     message: "Access denied: Managers only",
+      //   });
+      // }
 
       const leave_id = req.params.leaveId;
       const { status } = req.body;
@@ -163,67 +170,65 @@ const EmployeeController = {
       res.status(500).json({ message: "Server error" });
     }
   },
-  createManager: async (req, res) => {
+  // assignTeam: async (req, res) => {
+  //   console.log("controller hit");
+  //   try {
+  //     const manager_id = "101";
+  //     const employeeIds = ["102", "103"];
+
+  //     const result = await EmployeeService.assignManagerToEmployee(
+  //       employeeIds,
+  //       manager_id,
+  //     );
+
+  //     return res.status(200).json({
+  //       success: true,
+  //       message: "Team assigned successfully",
+  //       data: result,
+  //     });
+  //   } catch (error) {
+  //     console.error("Assign Team Error:", error.message);
+
+  //     return res.status(400).json({
+  //       success: false,
+  //       message: error.message,
+  //     });
+  //   }
+  // },
+
+  forgotPassword: async (req, res) => {
     try {
-      const {
-        first_name,
-        last_name,
-        father_name,
-        cnic,
-        dob,
-        address,
-        salary,
-        employee_id,
-        password,
-        department_id,
-      } = req.body;
-      if (!password || password.length < 6) {
-        return res.status(400).json({
-          message: "Password must be at least 6 characters",
-        });
-      }
+      const { email } = req.body;
 
-      if (!employee_id) {
-        return res.status(400).json({
-          message: "employee_id is required",
-        });
-      }
+      const result = await EmployeeService.forgotPassword(email);
 
-      const existing = await Employee.findOne({
-        where: { employee_id },
-      });
-
-      if (existing) {
-        return res.status(409).json({
-          message: "Employee already exists",
-        });
-      }
-
-      const manager = await Employee.create({
-        first_name,
-        last_name,
-        father_name,
-        cnic,
-        dob,
-        address,
-        salary,
-        employee_id,
-        password,
-        department_id,
-        manager_id: employee_id,
-        role: "Manager",
-      });
-
-      return res.status(201).json({
-        message: "Manager created successfully",
-        manager,
+      return res.status(200).json({
+        success: true,
+        message: result.message,
       });
     } catch (error) {
-      console.error("Create Manager Error:", error);
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  },
+  resetPassword: async (req, res) => {
+    try {
+      const { token } = req.params;
+      const { new_password } = req.body;
 
-      return res.status(500).json({
-        message: "Error creating manager",
-        error: error.message,
+      const result = await EmployeeService.resetPassword(token, new_password);
+      console.log("new password is created");
+
+      return res.status(200).json({
+        success: true,
+        message: result.message,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
       });
     }
   },

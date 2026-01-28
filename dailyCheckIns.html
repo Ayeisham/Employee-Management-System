@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -253,7 +253,7 @@
         .addEventListener("submit", async (e) => {
           e.preventDefault();
           const type = document.querySelector(
-            'input[name="type"]:checked'
+            'input[name="type"]:checked',
           )?.value;
           const msg = document.getElementById("message");
           msg.textContent = "";
@@ -274,7 +274,7 @@
                   Authorization: "Bearer " + localStorage.getItem("token"),
                 },
                 body: JSON.stringify({ type }),
-              }
+              },
             );
             const result = await res.json();
             msg.textContent = result.message;
@@ -307,13 +307,12 @@
                 Authorization: "Bearer " + localStorage.getItem("token"),
               },
               body: JSON.stringify({
-                employee_id: user.employee_id,
                 start_date: from,
                 end_date: to,
                 reason,
                 leave_type,
               }),
-            }
+            },
           );
 
           const result = await res.json();
@@ -386,7 +385,7 @@
               headers: {
                 Authorization: "Bearer " + localStorage.getItem("token"),
               },
-            }
+            },
           );
 
           if (!res.ok) {
@@ -432,7 +431,7 @@
               headers: {
                 Authorization: "Bearer " + localStorage.getItem("token"),
               },
-            }
+            },
           );
 
           if (!res.ok) {
@@ -459,7 +458,7 @@
             tbody.innerHTML += `
                 <tr>
                     <td>${r.employee_id}</td>
-                    <td>${r.first_name} ${r.last_name}</td>
+                    <td>${r.employee?.first_name || ""} ${r.employee?.last_name || ""}</td>
                     <td>${r.start_date}</td>
                     <td>${r.end_date}</td>
                     <td>${r.reason}</td>
@@ -487,7 +486,7 @@
                 Authorization: "Bearer " + localStorage.getItem("token"),
               },
               body: JSON.stringify({ status }),
-            }
+            },
           );
 
           const result = await res.json();
